@@ -2,8 +2,8 @@ name: Publish Docker Image to Docker Hub
 
 on:
   push:
-    # TODO: publish on main branch -> branches: [ "**" ]
-    # TODO: publish only when the repo is tagged -> tags: [ "**" ]
+    branches: [ "**" ]
+    tags: [ "**" ]
 
 jobs:
   publish:
