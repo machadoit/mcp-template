@@ -161,6 +161,23 @@ To use this MCP server with Claude Desktop, add it to your `claude_desktop_confi
 
 After adding this configuration, restart Claude Desktop. The MCP server will appear as available tools that Claude can use during conversations.
 
+## Automated Publishing (Optional)
+
+This template includes a GitHub Action (`.github/workflows/docker-publish.yml`) that automatically publishes Docker images to **Docker Hub** when you push code.
+
+### To Use Docker Hub Publishing:
+1. Create a Docker Hub account and repository
+2. Add these to your GitHub repository settings:
+   - **Variable**: `DOCKERHUB_USERNAME` (your Docker Hub username)
+   - **Secret**: `DOCKERHUB_TOKEN` (your Docker Hub access token)
+3. Push to `main` branch or create any tag → automatic Docker image build and publish
+
+### To Remove Automated Publishing:
+If you don't want automatic Docker Hub publishing, simply delete:
+```bash
+rm .github/workflows/docker-publish.yml
+```
+
 ## Development Workflow
 
 1. **Edit** `server.py` with your tools
