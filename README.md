@@ -123,6 +123,44 @@ docker run -i --rm -v $HOME/sandbox:/workdir/sandbox:rw mcp-template
 
 This approach lets you build powerful MCP tools while maintaining **fine-grained control** over what they can access.
 
+## Configuration
+
+### Connecting to Claude Desktop
+
+To use this MCP server with Claude Desktop, add it to your `claude_desktop_config.json` configuration file:
+
+```json
+{
+  "mcpServers": {
+    "mcp-template": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm", "mcp-template"
+      ]
+    }
+  }
+}
+```
+
+#### To add read access to your Documents you can:
+
+```json
+{
+  "mcpServers": {
+    "mcp-template": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "<REPLACE_WITH_HOME_PATH>/Documents:/workdir/docs:ro",
+        "mcp-template"
+      ]
+    }
+  }
+}
+```
+
+After adding this configuration, restart Claude Desktop. The MCP server will appear as available tools that Claude can use during conversations.
+
 ## Development Workflow
 
 1. **Edit** `server.py` with your tools
