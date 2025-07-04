@@ -11,6 +11,7 @@ test: build
         --tmpfs /tmp \
         --cap-drop ALL \
         --security-opt no-new-privileges \
+        -v "{{justfile_directory()}}/test-mcp-sandbox:/workdir/test-mcp-sandbox:ro" \
         mcp-template
 
 # Interactive shell for development/debugging
@@ -22,6 +23,7 @@ dev: build
         --tmpfs /tmp \
         --cap-drop ALL \
         --security-opt no-new-privileges \
+        -v "{{justfile_directory()}}/test-mcp-sandbox:/workdir/test-mcp-sandbox:ro" \
         --entrypoint /bin/sh \
         mcp-template
 
@@ -34,4 +36,5 @@ serve: build
         --tmpfs /tmp \
         --cap-drop ALL \
         --security-opt no-new-privileges \
+        -v "{{justfile_directory()}}/test-mcp-sandbox:/workdir/test-mcp-sandbox:ro" \
         mcp-template
