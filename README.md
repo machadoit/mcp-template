@@ -35,8 +35,11 @@ just build
 # Test with MCP Inspector (provides URL to open in browser)
 just test
 
-# Run container in background
-just run
+# Interactive development shell
+just dev
+
+# Run MCP server in background
+just serve
 ```
 
 ### Manual Usage (without Just)
@@ -49,7 +52,7 @@ docker build -t mcp-template .
 npx @modelcontextprotocol/inspector docker run -i --rm mcp-template
 
 # Run in background
-docker run -i -d --rm --name=mcp-template mcp-template
+docker run -i -d --rm mcp-template
 ```
 
 ## Testing
@@ -84,24 +87,19 @@ Add new tools by creating functions with the `@mcp.tool` decorator:
 
 ```python
 @mcp.tool
-def greet(name: str) -> str:
-    """Greet someone by name"""
-    return f"Hello, {name}!"
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
 
 @mcp.tool
-def list_files() -> str:
-    """List files in current directory"""
-    import os
-    return "\n".join(os.listdir("."))
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers"""
+    return a * b
 ```
 
 ## Security & Access Control
 
-This template emphasizes **secure, controlled access** to your file system:
-
-### Sandboxed Execution
-- **Container isolation** - MCP server runs in its own container environment
-- **Controlled network access** - Add `--network none` to disable internet, or allow selective connectivity
+This template emphasizes **secure, controlled access** to your file system.
 
 ### Controlled File Access
 By default, the container has **no access** to your host files. You explicitly grant access using volume mounts:
@@ -115,11 +113,64 @@ docker run -i --rm -v $HOME/code:/workdir/code:ro mcp-template
 docker run -i --rm -v $HOME/sandbox:/workdir/sandbox:rw mcp-template
 ```
 
+### Maximum Security Configuration
+
+For the most secure setup, combine multiple flags:
+
+```bash
+docker run -i --rm \
+  --network none \
+  --user $(id -u):$(id -g) \
+  --read-only \
+  --tmpfs /tmp \
+  --cap-drop ALL \
+  --security-opt no-new-privileges \
+  -v $HOME/safe-folder:/workdir/data:ro \
+  mcp-template
+```
+
+> Note: You may need to replace the `$(id -u):$(id -g)` and `$HOME` with the explicit values on the agent configuration.
+
+### Security Flags Details
+
+For enhanced security, consider adding these Docker flags:
+
+• **`--network none`** - Completely disables network access
+  - Prevents the container from making any network connections
+  - Ideal for file processing tools that don't need internet access
+  - Example: `docker run -i --rm --network none mcp-template`
+
+• **`--user $(id -u):$(id -g)`** - Runs container as current user
+  - Prevents root privilege escalation
+  - Files created by container will have your user ownership
+  - Example: `docker run -i --rm --user $(id -u):$(id -g) mcp-template`
+
+• **`--read-only`** - Makes container filesystem read-only
+  - Prevents container from modifying its own files
+  - Enhances security by limiting container's ability to persist changes
+  - Example: `docker run -i --rm --read-only mcp-template`
+
+• **`--tmpfs /tmp`** - Provides temporary filesystem in memory
+  - Allows container to write to /tmp without affecting host
+  - Useful when combined with `--read-only`
+  - Example: `docker run -i --rm --read-only --tmpfs /tmp mcp-template`
+
+• **`--cap-drop ALL`** - Removes all Linux capabilities
+  - Minimizes container privileges
+  - Prevents container from performing privileged operations
+  - Example: `docker run -i --rm --cap-drop ALL mcp-template`
+
+• **`--security-opt no-new-privileges`** - Prevents privilege escalation
+  - Blocks processes from gaining additional privileges
+  - Added security layer against potential exploits
+  - Example: `docker run -i --rm --security-opt no-new-privileges mcp-template`
+
 ### Why This Matters
 - **Prevent accidents** - MCP server can't modify files unless explicitly permitted
 - **Limit scope** - Only mount directories the server actually needs
 - **Audit access** - Clear visibility into what directories are accessible
 - **Safe experimentation** - Test tools on copies/sandboxes before using on real data
+- **Defense in depth** - Multiple security layers protect against various attack vectors
 
 This approach lets you build powerful MCP tools while maintaining **fine-grained control** over what they can access.
 
@@ -128,6 +179,8 @@ This approach lets you build powerful MCP tools while maintaining **fine-grained
 ### Connecting to Claude Desktop
 
 To use this MCP server with Claude Desktop, add it to your `claude_desktop_config.json` configuration file:
+
+#### Basic configuration:
 
 ```json
 {
@@ -142,8 +195,7 @@ To use this MCP server with Claude Desktop, add it to your `claude_desktop_confi
 }
 ```
 
-#### To add read access to your Documents you can:
-
+#### Configuration with read access to Documents:
 ```json
 {
   "mcpServers": {
@@ -151,6 +203,28 @@ To use this MCP server with Claude Desktop, add it to your `claude_desktop_confi
       "command": "docker",
       "args": [
         "run", "-i", "--rm",
+        "-v", "<REPLACE_WITH_HOME_PATH>/Documents:/workdir/docs:ro",
+        "mcp-template"
+      ]
+    }
+  }
+}
+```
+
+#### Maximum security configuration (no network, minimal privileges):
+```json
+{
+  "mcpServers": {
+    "mcp-template-max-secure": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--network", "none",
+        "--user", "<REPLACE_WITH_USER>:<REPLACE_WITH_GROUP>",
+        "--read-only",
+        "--tmpfs", "/tmp",
+        "--cap-drop", "ALL",
+        "--security-opt", "no-new-privileges",
         "-v", "<REPLACE_WITH_HOME_PATH>/Documents:/workdir/docs:ro",
         "mcp-template"
       ]
