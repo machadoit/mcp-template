@@ -1,6 +1,8 @@
 FROM python:3.12-slim
 
-RUN pip install --no-cache-dir fastmcp
+# Install dependencies and clean up in single layer
+RUN pip install --no-cache-dir fastmcp && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create app directory for MCP server code
 WORKDIR /app
